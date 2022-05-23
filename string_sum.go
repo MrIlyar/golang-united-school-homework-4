@@ -2,6 +2,9 @@ package string_sum
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
 //use these errors as appropriate, wrapping them with fmt.Errorf function
@@ -23,5 +26,61 @@ var (
 // Use the errors defined above as described, again wrapping into fmt.Errorf
 
 func StringSum(input string) (output string, err error) {
-	return "", nil
+	if strings.TrimSpace(input) == "" {
+		return "", fmt.Errorf("invalid input: %w", errorEmptyInput)
+	}
+
+	var clearedInput = strings.ReplaceAll(input, " ", "")
+
+	var isFirstOperandNegative = strings.HasPrefix(clearedInput, "-")
+
+	if len(clearedInput) > 1 && (strings.HasPrefix(clearedInput, "+") || strings.HasPrefix(clearedInput, "-")) {
+		clearedInput = clearedInput[1:]
+	}
+
+	var numberOfOperators = strings.Count(clearedInput, "+") + strings.Count(clearedInput, "-")
+	if numberOfOperators != 1 {
+		return "", fmt.Errorf("invalid input: %w", errorNotTwoOperands)
+	}
+
+	var firstOperand, secondOperand, operator string = "", "", ""
+
+	var operatorIndex = strings.IndexFunc(clearedInput, getOperatorIndex)
+	operator = string(clearedInput[operatorIndex])
+
+	firstOperand = clearedInput[0:operatorIndex]
+
+	if operatorIndex < (len(clearedInput) - 1) {
+		secondOperand = clearedInput[operatorIndex+1:]
+	}
+
+	if len(firstOperand) == 0 || len(secondOperand) == 0 {
+		return "", fmt.Errorf("invalid input: %w", errorNotTwoOperands)
+	}
+
+	var firstOperandValue, secondOperandValue int = 0, 0
+
+	if firstOperandValue, err = strconv.Atoi(firstOperand); err != nil {
+		return "", fmt.Errorf("invalid first operand: %w", err)
+	}
+
+	if secondOperandValue, err = strconv.Atoi(secondOperand); err != nil {
+		return "", fmt.Errorf("invalid second operand: %w", err)
+	}
+
+	if isFirstOperandNegative {
+		firstOperandValue = firstOperandValue * -1
+	}
+
+	if operator == "+" {
+		output = strconv.FormatInt(int64(firstOperandValue+secondOperandValue), 10)
+	} else {
+		output = strconv.FormatInt(int64(firstOperandValue-secondOperandValue), 10)
+	}
+
+	return output, nil
+}
+
+func getOperatorIndex(char rune) bool {
+	return char == '+' || char == '-'
 }
